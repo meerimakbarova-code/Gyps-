@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Розовый планировщик</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@600;700;800&family=Pacifico&display=swap" rel="stylesheet">
+  <style>
+    /* Основные переменные палитры */
+    :root {
+      --bg-pink-top: #ffd6e8;
+      --bg-pink-bottom: #f39ec4;
+      --card-bg: rgba(255, 250, 252, 0.96);
+      --pink-accent: #d6337c;
+      --pink-accent-dark: #ad1f60;
+      --pink-soft: #ffe8f2;
+      --pink-border: #f3aecb;
+      --text-main: #59253e;
+      --text-muted: #8c526e;
+      --shadow-card: 0 14px 34px rgba(214, 51, 124, 0.18);
+      --doll-scale: 1;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      font-family: 'Fredoka', 'Nunito', system-ui, -apple-system, sans-serif;
+      color: var(--text-main);
+      background-color: #ffc5df;
+      background-image:
+        radial-gradient(rgba(255, 255, 255, 0.68) 2.5px, transparent 3px),
+        linear-gradient(180deg, var(--bg-pink-top) 0%, var(--bg-pink-bottom) 100%);
+      background-size: 28px 28px, 100% 100%;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Слой падающих и всплывающих сердечек */
+    .sky {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .falling-heart {
+      position: absolute;
+      top: -36px;
+      user-select: none;
+      opacity: 0.85;
+      animation: fallDown linear forwards;
+    }
+
+    @keyframes fallDown {
+      0% {
+        transform: translateY(-20px) translateX(0) rotate(0deg) scale(0.85);
+        opacity: 0;
+      }
+      12% {
+        opacity: 0.9;
+      }
+      50% {
+        transform: translateY(50vh) translateX(14px) rotate(180deg) scale(1);
+      }
+      100% {
+        transform: translateY(106vh) translateX(-10px) rotate(360deg) scale(0.95);
+        opacity: 0;
+      }
+    }
+
+    /* Контейнер страницы */
+    .page {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 740px;
+      margin: 0 auto;
+      padding: clamp(14px, 3vw, 26px);
+    }
+
+    /* Верхняя зона куклы и облачка */
+    .doll-zone {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 10px;
+    }
+
+    /* CSS-кукла с ручками и анимациями */
+    .doll {
+      position: relative;
+      width: calc(92px * var(--doll-scale));
+      height: calc(118px * var(--doll-scale));
+      flex-shrink: 0;
+      cursor: pointer;
+      user-select: none;
+      transform-origin: bottom center;
+      transition: transform 0.25s ease;
+    }
+
+    .doll:hover {
+      transform: translateY(-3px) scale(1.03);
+    }
+
+    /* Волосы сзади */
+    .doll .hair-back {
+      position: absolute;
+      top: 6%;
+      left: 11%;
+      width: 78%;
+      height: 64%;
+      background: linear-gradient(180deg, #ffe26a 0%, #f4b424 100%);
+      border-radius: 46% 46% 30% 30%;
+      border: 2px solid #d99714;
+      z-index: 1;
+    }
+
+    /* Лицо */
+    .doll .face {
+      position: absolute;
+      top: 13%;
+      left: 21%;
+      width: 58%;
+      height: 45%;
+      background: #ffe3d3;
+      border-radius: 50%;
+      border: 2px solid #e7b398;
+      z-index: 4;
+      overflow: hidden;
+    }
+
+    /* Чёлка */
+    .doll .bangs {
+      position: absolute;
+      top: -5%;
+      left: -5%;
+      width: 110%;
+      height: 42%;
+      background: #ffd43b;
+      border-radius: 50% 50% 36% 36%;
+      border-bottom: 2px solid #dfa41b;
+    }
+
+    /* Глаза */
+    .doll .eyes {
+      position: absolute;
+      top: 47%;
+      left: 20%;
+      width: 60%;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .doll .eye {
+      width: 7px;
+      height: 8px;
+      background: #3a222d;
+      border-radius: 50%;
+      position: relative;
+      animation: blink 4.2s infinite;
+    }
+
+    .doll .eye::after {
+      content: '';
+      position: absolute;
+      top: 1.5px;
+      left: 1.5px;
+      width: 2.5px;
+      height: 2.5px;
+      background: #fff;
+      border-radius: 50%;
+    }
+
+    @keyframes blink {
+      0%, 93%, 100% { transform: scaleY(1); }
+      96% { transform: scaleY(0.1); }
+    }
+
+    /* Румянец */
+    .doll .cheek {
+      position: absolute;
+      top: 63%;
+      width: 9px;
+      height: 5px;
+      background: rgba(255, 107, 157, 0.58);
+      border-radius: 50%;
+    }
+
+    .doll .cheek.left { left: 11%; }
+    .doll .cheek.right { right: 11%; }
+
+    /* Улыбка */
+    .doll .smile {
+      position: absolute;
+      bottom: 14%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 14px;
+      height: 7px;
+      border-bottom: 2.5px solid #d6337c;
+      border-radius: 0 0 12px 12px;
+      transition: all 0.2s ease;
+    }
+
+    /* Счастливый ротик при танце */
+    body.dancing .doll .smile {
+      height: 9px;
+      background: #ff6b9d;
+      border: 1.5px solid #ad1f60;
+      border-radius: 2px 2px 12px 12px;
+    }
+
+    /* Бантик / цветок */
+    .doll .bow {
+      position: absolute;
+      top: -1%;
+      right: 10%;
+      font-size: calc(20px * var(--doll-scale));
+      line-height: 1;
+      z-index: 5;
+      filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.14));
+    }
+
+    /* Ручки куклы (видны и активно машут в танце!) */
+    .doll .arm {
+      position: absolute;
+      top: 58%;
+      width: 16%;
+      height: 28%;
+      background: #ffd7c2;
+      border: 1.5px solid #e3aa8d;
+      border-radius: 10px;
+      z-index: 2;
+      transition: transform 0.25s ease;
+    }
+
+    .doll .arm.left {
+      left: 10%;
+      transform-origin: top right;
+      transform: rotate(24deg);
+    }
+
+    .doll .arm.right {
+      right: 10%;
+      transform-origin: top left;
+      transform: rotate(-24deg);
+    }
+
+    /* Платье */
+    .doll .dress {
+      position: absolute;
+      bottom: 4%;
+      left: 19%;
+      width: 62%;
+      height: 41%;
+      background:
+        radial-gradient(rgba(255, 255, 255, 0.65) 1.5px, transparent 2px),
+        linear-gradient(180deg, #ff6aa3 0%, #9b5de5 100%);
+      background-size: 10px 10px, 100% 100%;
+      clip-path: polygon(22% 0%, 78% 0%, 100% 100%, 0% 100%);
+      border-radius: 8px 8px 14px 14px;
+      z-index: 3;
+    }
+
+    .doll .dress::after {
+      content: '💖';
+      position: absolute;
+      top: 32%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: calc(10px * var(--doll-scale));
+    }
+
+    /* Подружка-брюнетка */
+    .doll.friend {
+      --doll-scale: 0.72;
+    }
+
+    .doll.brunette .hair-back {
+      background: linear-gradient(180deg, #6e4232 0%, #442419 100%);
+      border-color: #30170f;
+    }
+
+    .doll.brunette .bangs {
+      background: #5b3325;
+      border-bottom-color: #381d14;
+    }
+
+    .doll.brunette .dress {
+      background: linear-gradient(180deg, #6ec6ff 0%, #3b98e6 100%);
+    }
+
+    .doll.brunette .dress::after {
+      content: '⭐';
+    }
+
+    /* Анимация режима танца (как на 0:06-0:09 видео) */
+    @keyframes dollDance {
+      0%, 100% { transform: translateY(0) rotate(-6deg); }
+      25% { transform: translateY(-9px) rotate(0deg); }
+      50% { transform: translateY(0) rotate(6deg); }
+      75% { transform: translateY(-9px) rotate(0deg); }
+    }
+
+    @keyframes armWaveLeft {
+      0%, 100% { transform: rotate(22deg); }
+      50% { transform: rotate(125deg); }
+    }
+
+    @keyframes armWaveRight {
+      0%, 100% { transform: rotate(-22deg); }
+      50% { transform: rotate(-125deg); }
+    }
+
+    @keyframes petBounce {
+      0%, 100% { transform: translateY(0) rotate(-8deg) scale(1); }
+      50% { transform: translateY(-8px) rotate(8deg) scale(1.12); }
+    }
+
+    body.dancing .doll {
+      animation: dollDance 0.65s ease-in-out infinite;
+    }
+
+    body.dancing .doll.friend {
+      animation: dollDance 0.65s ease-in-out infinite reverse;
+    }
+
+    body.dancing .doll .arm.left {
+      animation: armWaveLeft 0.55s ease-in-out infinite;
+    }
+
+    body.dancing .doll .arm.right {
+      animation: armWaveRight 0.55s ease-in-out infinite;
+    }
+
+    body.dancing .pet {
+      animation: petBounce 0.55s ease-in-out infinite;
+    }
+
+    body.dancing .pet:nth-child(3) {
+      animation-delay: 0.15s;
+    }
+
+    body.dancing .pet:nth-child(4) {
+      animation-delay: 0.3s;
+    }
+
+    /* Облачко речи куклы */
+    .bubble {
+      margin: 0;
+      flex: 1;
+      min-width: 0;
+      background: #ffffff;
+      border: 2.5px solid var(--pink-border);
+      border-radius: 22px;
+      padding: 14px 20px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      font-size: clamp(14px, 2.3vw, 16px);
+      line-height: 1.4;
+      color: var(--text-main);
+      box-shadow: 0 8px 20px rgba(214, 51, 124, 0.12);
+      position: relative;
+      overflow-wrap: anywhere;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    body.dancing .bubble {
+      border-color: var(--pink-accent);
+      background: #fff7fb;
+    }
+
+    .bubble::before {
+      content: '';
+      position: absolute;
+      left: -12px;
+      top: 50%;
+      transform: translateY(-50%);
+      border-width: 8px 12px 8px 0;
+      border-style: solid;
+      border-color: transparent var(--pink-border) transparent transparent;
+    }
+
+    body.dancing .bubble::before {
+      border-right-color: var(--pink-accent);
+    }
+
+    .bubble::after {
+      content: '';
+      position: absolute;
+      left: -8px;
+      top: 50%;
+      transform: translateY(-50%);
+      border-width: 6px 10px 6px 0;
+      border-style: solid;
+      border-color: transparent #ffffff transparent transparent;
+    }
+
+    /* Ряд друзей и питомцев */
+    .friends {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(14px, 4vw, 28px);
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .pet {
+      display: inline-block;
+      font-size: clamp(28px, 5vw, 35px);
+      filter: drop-shadow(0 4px 8px rgba(173, 31, 96, 0.16));
+      transition: transform 0.2s ease;
+      cursor: default;
+      user-select: none;
+    }
+
+    .pet:hover {
+      transform: scale(1.18) rotate(-6deg);
+    }
+
+    /* Основная карточка */
+    .card {
+      width: 100%;
+      background: var(--card-bg);
+      border: 3px solid var(--pink-border);
+      border-radius: 30px;
+      padding: clamp(18px, 4vw, 28px);
+      box-shadow: var(--shadow-card);
+      backdrop-filter: blur(6px);
+    }
+
+    h1 {
+      margin: 0 0 16px;
+      font-family: 'Pacifico', 'Fredoka', cursive;
+      font-size: clamp(28px, 5vw, 38px);
+      font-weight: 400;
+      color: var(--pink-accent);
+      text-shadow: 0 2px 0 #ffd6e8;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h1::after {
+      content: '✨';
+      font-size: 0.78em;
+    }
+
+    h2 {
+      margin: 20px 0 12px;
+      font-family: 'Nunito', sans-serif;
+      font-size: clamp(18px, 3.2vw, 21px);
+      font-weight: 800;
+      color: var(--pink-accent);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Поле кванта времени */
+    #quantum {
+      width: min(260px, 100%);
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: 2px solid var(--pink-border);
+      background: #ffffff;
+      color: var(--text-main);
+      font-family: 'Nunito', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    #quantum:focus {
+      border-color: var(--pink-accent);
+      box-shadow: 0 0 0 4px rgba(214, 51, 124, 0.14);
+    }
+
+    /* Строки процессов (как на видео: круглый бейдж, 2 поля-пилюли и круглая кнопка ×) */
+    #rows {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .process-row {
+      display: grid;
+      grid-template-columns: 44px 1fr 1fr 36px;
+      gap: 12px;
+      align-items: center;
+      background: #fff2f8;
+      border: 1.5px solid #f7c5dc;
+      border-radius: 26px;
+      padding: 10px 14px;
+      animation: popIn 0.24s ease;
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: translateY(6px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .proc-badge {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      font-size: 14px;
+      box-shadow: 0 4px 10px rgba(214, 51, 124, 0.22);
+    }
+
+    .field-group label {
+      font-size: 12px;
+      margin-bottom: 4px;
+      padding-left: 8px;
+    }
+
+    .field-group input {
+      width: 100%;
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1.5px solid #f2b6d1;
+      background: #ffffff;
+      color: var(--text-main);
+      font-family: 'Nunito', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .field-group input:focus {
+      border-color: var(--pink-accent);
+      box-shadow: 0 0 0 3px rgba(214, 51, 124, 0.14);
+    }
+
+    .btn-del {
+      width: 34px;
+      height: 34px;
+      border: none;
+      border-radius: 50%;
+      background: #e3d5f5;
+      color: #6b4c9a;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      align-self: end;
+      margin-bottom: 3px;
+      transition: background 0.2s, transform 0.15s;
+    }
+
+    .btn-del:hover {
+      background: #d0bbf0;
+      transform: scale(1.08);
+    }
+
+    /* Кнопки действий */
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .buttons button {
+      padding: 11px 22px;
+      border-radius: 999px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .buttons button:active {
+      transform: scale(0.97);
+    }
+
+    .btn-add {
+      background: #ffffff;
+      color: var(--pink-accent);
+      border: 2px solid var(--pink-border);
+    }
+
+    .btn-add:hover {
+      background: #fff0f6;
+      border-color: var(--pink-accent);
+    }
+
+    .btn-run {
+      background: linear-gradient(135deg, #ff6ca3 0%, #d6337c 100%);
+      color: #ffffff;
+      border: none;
+      padding-left: 28px;
+      padding-right: 28px;
+      box-shadow: 0 6px 18px rgba(214, 51, 124, 0.34);
+    }
+
+    .btn-run:hover {
+      box-shadow: 0 9px 22px rgba(214, 51, 124, 0.44);
+      transform: translateY(-1px);
+    }
+
+    /* Результаты */
+    .hidden {
+      display: none;
+    }
+
+    #result {
+      margin-top: 22px;
+      padding-top: 14px;
+      border-top: 2px dashed #f5bfd7;
+      animation: popIn 0.3s ease;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 18px;
+      border: 2px solid var(--pink-border);
+      background: #ffffff;
+      box-shadow: 0 6px 16px rgba(214, 51, 124, 0.08);
+    }
+
+    table {
+      width: 100%;
+      min-width: 520px;
+      border-collapse: collapse;
+      text-align: center;
+      font-family: 'Nunito', sans-serif;
+      font-variant-numeric: tabular-nums;
+    }
+
+    th {
+      background: linear-gradient(180deg, #ff7eb3 0%, #e44b8d 100%);
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 13px;
+      padding: 10px 8px;
+      line-height: 1.25;
+    }
+
+    td {
+      padding: 10px 8px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+      border-bottom: 1px solid #fce4ef;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #fff8fb;
+    }
+
+    /* Блоки средних значений */
+    .averages {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .avg-box {
+      background: #ffe9f3;
+      border: 2px solid var(--pink-border);
+      border-radius: 999px;
+      padding: 9px 20px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text-main);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .avg-box b {
+      color: var(--pink-accent);
+      font-size: 16px;
+      margin-left: 4px;
+    }
+
+    /* Диаграмма Ганта (как на видео: горизонтальный ряд цветных пилюль P1 0-2, P2 2-4...) */
+    .gantt {
+      display: flex;
+      align-items: stretch;
+      overflow-x: auto;
+      padding: 6px 2px 10px;
+      gap: 6px;
+      font-family: 'Nunito', sans-serif;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .gantt-block {
+      min-width: 66px;
+      padding: 9px 10px;
+      border-radius: 14px;
+      color: #ffffff;
+      font-weight: 800;
+      text-align: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      animation: ganttPop 0.35s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+      transition: transform 0.18s ease;
+    }
+
+    .gantt-block:hover {
+      transform: translateY(-2px) scale(1.03);
+    }
+
+    @keyframes ganttPop {
+      from { opacity: 0; transform: scale(0.75) translateY(8px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .gantt-proc {
+      font-size: 14px;
+      line-height: 1.1;
+    }
+
+    .gantt-range {
+      font-size: 11px;
+      opacity: 0.92;
+      font-weight: 700;
+    }
+
+    .gantt-block.idle {
+      background: #e5ced9 !important;
+      color: #7c5669;
+    }
+
+    /* Адаптация под узкие экраны */
+    @media (max-width: 540px) {
+      :root {
+        --doll-scale: 0.84;
+      }
+
+      .process-row {
+        grid-template-columns: 38px 1fr 1fr 32px;
+        gap: 8px;
+        padding: 10px;
+        border-radius: 20px;
+      }
+
+      .proc-badge {
+        width: 36px;
+        height: 36px;
+        font-size: 13px;
+      }
+
+      .field-group input {
+        padding: 7px 10px;
+        font-size: 14px;
+      }
+
+      .buttons button {
+        flex: 1 1 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Слой для падающих сердечек -->
+  <div class="sky" id="sky"></div>
+
+  <div class="page">
+
+    <!-- Кукла и облачко -->
+    <div class="doll-zone">
+      <div class="doll" id="doll" title="Нажми, чтобы потанцевать!">
+        <div class="hair-back"></div>
+        <div class="arm left"></div>
+        <div class="arm right"></div>
+        <div class="face">
+          <div class="bangs"></div>
+          <div class="eyes">
+            <div class="eye"></div>
+            <div class="eye"></div>
+          </div>
+          <div class="cheek left"></div>
+          <div class="cheek right"></div>
+          <div class="smile"></div>
+        </div>
+        <div class="bow">🎀</div>
+        <div class="dress"></div>
+      </div>
+      <p class="bubble" id="bubble">Привет, красотка! Добавь процессы и нажми «Запустить»!</p>
+    </div>
+
+    <!-- Друзья -->
+    <div class="friends">
+      <div class="doll friend brunette" title="Подружка">
+        <div class="hair-back"></div>
+        <div class="arm left"></div>
+        <div class="arm right"></div>
+        <div class="face">
+          <div class="bangs"></div>
+          <div class="eyes">
+            <div class="eye"></div>
+            <div class="eye"></div>
+          </div>
+          <div class="cheek left"></div>
+          <div class="cheek right"></div>
+          <div class="smile"></div>
+        </div>
+        <div class="bow">🌸</div>
+        <div class="dress"></div>
+      </div>
+      <span class="pet" title="Щенок">🐶</span>
+      <span class="pet" title="Единорог">🦄</span>
+      <span class="pet" title="Котёнок">🐱</span>
+    </div>
+
+    <!-- Форма -->
+    <div class="card">
+      <h1>Round Robin</h1>
+
+      <label for="quantum">Квант времени</label>
+      <input type="number" id="quantum" min="1" value="2">
+
+      <h2>Процессы</h2>
+      <div id="rows"></div>
+
+      <div class="buttons">
+        <button class="btn-add" id="addBtn" type="button">+ Добавить процесс</button>
+        <button class="btn-run" id="runBtn" type="button">Запустить</button>
+      </div>
+
+      <!-- Результаты -->
+      <div id="result" class="hidden">
+        <h2>Результаты</h2>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Процесс</th>
+                <th>AT<br>приход</th>
+                <th>BT<br>выполнение</th>
+                <th>ST<br>старт</th>
+                <th>CT<br>завершение</th>
+                <th>TAT<br>оборот</th>
+                <th>WT<br>ожидание</th>
+              </tr>
+            </thead>
+            <tbody id="resultBody"></tbody>
+          </table>
+        </div>
+
+        <div class="averages">
+          <div class="avg-box">Среднее WT: <b id="avgWT">0</b></div>
+          <div class="avg-box">Среднее TAT: <b id="avgTAT">0</b></div>
+        </div>
+
+        <h2>Диаграмма Ганта</h2>
+        <div class="gantt" id="gantt"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Цвета процессов (как на видео: розовый P1, голубой/лавандовый P2, жёлто-золотой P3 и др.)
+    const BADGE_COLORS = [
+      'linear-gradient(135deg, #ff7eb3, #e64980)',
+      'linear-gradient(135deg, #e56b9f, #c2255c)',
+      'linear-gradient(135deg, #b197fc, #7950f2)',
+      'linear-gradient(135deg, #74c0fc, #339af0)',
+      'linear-gradient(135deg, #ffd43b, #f59f00)',
+      'linear-gradient(135deg, #63e6be, #20c997)'
+    ];
+
+    const GANTT_COLORS = [
+      { bg: 'linear-gradient(135deg, #ff85b3, #ec4899)', text: '#ffffff' },
+      { bg: 'linear-gradient(135deg, #93c5fd, #60a5fa)', text: '#ffffff' },
+      { bg: 'linear-gradient(135deg, #fde047, #facc15)', text: '#5c3d00' },
+      { bg: 'linear-gradient(135deg, #c4b5fd, #8b5cf6)', text: '#ffffff' },
+      { bg: 'linear-gradient(135deg, #6ee7b7, #10b981)', text: '#ffffff' },
+      { bg: 'linear-gradient(135deg, #fdba74, #f97316)', text: '#ffffff' }
+    ];
+
+    const sky = document.getElementById('sky');
+    const rowsContainer = document.getElementById('rows');
+    const addBtn = document.getElementById('addBtn');
+    const runBtn = document.getElementById('runBtn');
+    const quantumInput = document.getElementById('quantum');
+    const resultSection = document.getElementById('result');
+    const resultBody = document.getElementById('resultBody');
+    const avgWTEl = document.getElementById('avgWT');
+    const avgTATEl = document.getElementById('avgTAT');
+    const ganttEl = document.getElementById('gantt');
+    const bubbleEl = document.getElementById('bubble');
+    const dollEl = document.getElementById('doll');
+    const friendDollEl = document.querySelector('.doll.friend');
+
+    const DEFAULT_BUBBLE = 'Привет, красотка! Добавь процессы и нажми «Запустить»!';
+    const DANCE_BUBBLE = 'Танцуем! 💃 Нажми ещё раз, чтобы остановить.';
+
+    let processCounter = 0;
+    let isDancing = false;
+    let heartInterval = null;
+
+    // 1. Падающие сердечки в фоне (❤️, 🩷, 💖, 💕)
+    function spawnHeart(burst = false) {
+      const heart = document.createElement('span');
+      const icons = ['❤️', '🩷', '💖', '💕', '💗'];
+      heart.className = 'falling-heart';
+      heart.textContent = icons[Math.floor(Math.random() * icons.length)];
+      heart.style.left = Math.random() * 100 + 'vw';
+      heart.style.fontSize = (burst ? 16 + Math.random() * 16 : 13 + Math.random() * 13) + 'px';
+      const duration = burst ? (3.2 + Math.random() * 2.8) : (5 + Math.random() * 4.5);
+      heart.style.animationDuration = duration + 's';
+      sky.appendChild(heart);
+
+      setTimeout(() => {
+        heart.remove();
+      }, duration * 1000);
+    }
+
+    function startHeartStream(rateMs) {
+      if (heartInterval) clearInterval(heartInterval);
+      heartInterval = setInterval(() => spawnHeart(isDancing), rateMs);
+    }
+
+    startHeartStream(700);
+    for (let i = 0; i < 7; i++) {
+      setTimeout(() => spawnHeart(false), i * 220);
+    }
+
+    // 2. Переключение режима танца при клике на куклу (как на 0:06-0:09 видео)
+    function toggleDance() {
+      isDancing = !isDancing;
+      document.body.classList.toggle('dancing', isDancing);
+
+      if (isDancing) {
+        bubbleEl.textContent = DANCE_BUBBLE;
+        startHeartStream(240);
+        for (let i = 0; i < 14; i++) {
+          setTimeout(() => spawnHeart(true), i * 70);
+        }
+      } else {
+        bubbleEl.textContent = DEFAULT_BUBBLE;
+        startHeartStream(700);
+      }
+    }
+
+    dollEl.addEventListener('click', toggleDance);
+    if (friendDollEl) {
+      friendDollEl.addEventListener('click', toggleDance);
+    }
+
+    // 3. Добавление строки процесса
+    function addProcessRow(atVal = 0, btVal = 4) {
+      const idx = rowsContainer.children.length;
+      processCounter = idx + 1;
+
+      const row = document.createElement('div');
+      row.className = 'process-row';
+      row.innerHTML = `
+        <div class="proc-badge" style="background: ${BADGE_COLORS[idx % BADGE_COLORS.length]}">P${processCounter}</div>
+        <div class="field-group">
+          <label>Время прихода</label>
+          <input type="number" class="input-at" min="0" value="${atVal}">
+        </div>
+        <div class="field-group">
+          <label>Время выполнения</label>
+          <input type="number" class="input-bt" min="1" value="${btVal}">
+        </div>
+        <button type="button" class="btn-del" title="Удалить процесс">×</button>
+      `;
+
+      row.querySelector('.btn-del').addEventListener('click', () => {
+        if (rowsContainer.children.length <= 1) {
+          bubbleEl.textContent = 'Нужен хотя бы один процесс для расчёта! 💕';
+          return;
+        }
+        row.remove();
+        renumberProcesses();
+      });
+
+      rowsContainer.appendChild(row);
+    }
+
+    function renumberProcesses() {
+      const rows = Array.from(rowsContainer.children);
+      rows.forEach((row, index) => {
+        const badge = row.querySelector('.proc-badge');
+        badge.textContent = `P${index + 1}`;
+        badge.style.background = BADGE_COLORS[index % BADGE_COLORS.length];
+      });
+      processCounter = rows.length;
+    }
+
+    addBtn.addEventListener('click', () => {
+      const nextAt = rowsContainer.children.length;
+      const randomBt = Math.floor(Math.random() * 4) + 2;
+      addProcessRow(nextAt, randomBt);
+      if (!isDancing) {
+        bubbleEl.textContent = `Добавлен процесс P${processCounter}! Нажимай «Запустить» ✨`;
+      }
+    });
+
+    // 4. Алгоритм планирования Round Robin
+    function runRoundRobin() {
+      const quantum = Math.max(1, parseInt(quantumInput.value, 10) || 2);
+      quantumInput.value = quantum;
+
+      const rowElements = Array.from(rowsContainer.children);
+      if (rowElements.length === 0) {
+        bubbleEl.textContent = 'Сначала добавь хотя бы один процесс! 🌸';
+        return;
+      }
+
+      const processes = rowElements.map((row, idx) => {
+        const atInput = row.querySelector('.input-at');
+        const btInput = row.querySelector('.input-bt');
+        const at = Math.max(0, parseInt(atInput.value, 10) || 0);
+        const bt = Math.max(1, parseInt(btInput.value, 10) || 1);
+        atInput.value = at;
+        btInput.value = bt;
+
+        return {
+          id: idx,
+          name: `P${idx + 1}`,
+          at,
+          bt,
+          rem: bt,
+          st: null,
+          ct: 0,
+          tat: 0,
+          wt: 0,
+          theme: GANTT_COLORS[idx % GANTT_COLORS.length]
+        };
+      });
+
+      const sorted = [...processes].sort((a, b) => a.at - b.at || a.id - b.id);
+      const queue = [];
+      const timeline = [];
+      let currentTime = 0;
+      let nextIdx = 0;
+      let completed = 0;
+
+      while (completed < sorted.length) {
+        while (nextIdx < sorted.length && sorted[nextIdx].at <= currentTime) {
+          queue.push(sorted[nextIdx]);
+          nextIdx++;
+        }
+
+        if (queue.length === 0) {
+          const nextArrival = sorted[nextIdx].at;
+          timeline.push({
+            name: 'Простой',
+            start: currentTime,
+            end: nextArrival,
+            idle: true
+          });
+          currentTime = nextArrival;
+          continue;
+        }
+
+        const proc = queue.shift();
+        if (proc.st === null) {
+          proc.st = currentTime;
+        }
+
+        const execTime = Math.min(quantum, proc.rem);
+        const start = currentTime;
+        const end = currentTime + execTime;
+
+        timeline.push({
+          name: proc.name,
+          start,
+          end,
+          theme: proc.theme,
+          idle: false
+        });
+
+        currentTime = end;
+        proc.rem -= execTime;
+
+        while (nextIdx < sorted.length && sorted[nextIdx].at <= currentTime) {
+          queue.push(sorted[nextIdx]);
+          nextIdx++;
+        }
+
+        if (proc.rem > 0) {
+          queue.push(proc);
+        } else {
+          proc.ct = currentTime;
+          proc.tat = proc.ct - proc.at;
+          proc.wt = proc.tat - proc.bt;
+          completed++;
+        }
+      }
+
+      renderResults(processes, timeline);
+    }
+
+    // 5. Отрисовка таблицы и диаграммы Ганта
+    function renderResults(processes, timeline) {
+      resultBody.innerHTML = '';
+      let totalWT = 0;
+      let totalTAT = 0;
+
+      processes.forEach((p) => {
+        totalWT += p.wt;
+        totalTAT += p.tat;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${p.name}</strong></td>
+          <td>${p.at}</td>
+          <td>${p.bt}</td>
+          <td>${p.st}</td>
+          <td>${p.ct}</td>
+          <td>${p.tat}</td>
+          <td>${p.wt}</td>
+        `;
+        resultBody.appendChild(tr);
+      });
+
+      const avgWT = (totalWT / processes.length).toFixed(2);
+      const avgTAT = (totalTAT / processes.length).toFixed(2);
+      avgWTEl.textContent = avgWT;
+      avgTATEl.textContent = avgTAT;
+
+      ganttEl.innerHTML = '';
+      timeline.forEach((slot, index) => {
+        const block = document.createElement('div');
+        block.className = 'gantt-block' + (slot.idle ? ' idle' : '');
+        block.style.animationDelay = `${index * 0.06}s`;
+
+        if (!slot.idle) {
+          block.style.background = slot.theme.bg;
+          block.style.color = slot.theme.text;
+        }
+
+        block.innerHTML = `
+          <span class="gantt-proc">${slot.name}</span>
+          <span class="gantt-range">${slot.start}–${slot.end}</span>
+        `;
+        ganttEl.appendChild(block);
+      });
+
+      resultSection.classList.remove('hidden');
+      if (!isDancing) {
+        bubbleEl.textContent = `Готово! Среднее WT: ${avgWT}, среднее TAT: ${avgTAT} 💖`;
+      }
+      resultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    runBtn.addEventListener('click', runRoundRobin);
+
+    // 3 стартовых процесса как на видео (P1: 0/5, P2: 1/3, P3: 2/4)
+    addProcessRow(0, 5);
+    addProcessRow(1, 3);
+    addProcessRow(2, 4);
+  </script>
+</body>
+</html>
